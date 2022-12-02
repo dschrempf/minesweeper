@@ -48,6 +48,15 @@ common exec
     -Wall -Wunused-packages -Wredundant-constraints -threaded -rtsopts
     -with-rtsopts=-N
 
+library
+  import:          common, lib
+  exposed-modules: Board
+  hs-source-dirs:  src
+  other-modules:
+  autogen-modules:
+  ghc-options:
+  build-depends:   base >=4.7 && <5
+
 executable minesweeper
   import:          common, exec
   main-is:         Main.hs
@@ -55,4 +64,19 @@ executable minesweeper
   other-modules:
   autogen-modules:
   ghc-options:
-  build-depends:   base >=4.7 && <5
+  build-depends:
+    , base         >=4.7 && <5
+    , minesweeper
+
+test-suite minesweeper-test
+  import:          common, test
+  main-is:         Spec.hs
+  hs-source-dirs:  test
+  other-modules:
+  autogen-modules:
+  ghc-options:
+  type:            exitcode-stdio-1.0
+  build-depends:
+    , base         >=4.7 && <5
+    , hspec
+    , minesweeper
