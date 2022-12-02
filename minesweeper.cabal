@@ -1,17 +1,15 @@
 cabal-version:      3.4
 name:               minesweeper
 version:            0.1.0.0
-synopsis:           Minesweeper, https://github.com/effectfully-ou/sketches/tree/f03d7a04c7132407a6e916ab33965ba27d96df1a/mineunifier
+synopsis:
+  Minesweeper, https://github.com/effectfully-ou/sketches/tree/f03d7a04c7132407a6e916ab33965ba27d96df1a/mineunifier
+
 description:
   Please see the README at <https://github.com/dschrempf/minesweeper#readme>
 
 category:           Math, Statistics
-homepage:
-  https://github.com/dschrempf/minesweeper#readme
-
-bug-reports:
-  https://github.com/dschrempf/minesweeper/issues
-
+homepage:           https://github.com/dschrempf/minesweeper#readme
+bug-reports:        https://github.com/dschrempf/minesweeper/issues
 author:             Dominik Schrempf
 maintainer:         dominik.schrempf@gmail.com
 copyright:          2022 Dominik Schrempf
@@ -47,5 +45,14 @@ common bench
 common exec
   default-language: Haskell2010
   ghc-options:
-    -Wall -Wunused-packages -Wredundant-constraints
-    -threaded -rtsopts -with-rtsopts=-N
+    -Wall -Wunused-packages -Wredundant-constraints -threaded -rtsopts
+    -with-rtsopts=-N
+
+executable minesweeper
+  import:          common, exec
+  main-is:         Main.hs
+  hs-source-dirs:  app
+  other-modules:
+  autogen-modules:
+  ghc-options:
+  build-depends:   base >=4.7 && <5
