@@ -29,10 +29,24 @@ testBoard =
     ]
 
 testBoardMinSol :: String
-testBoardMinSol = unlines ["---", "|?|", "---"]
+testBoardMinSol =
+  unlines
+    [ "    0",
+      "  \9484\9472\9472\9472\9488",
+      "0 \9474 ? \9474",
+      "  \9492\9472\9472\9472\9496"
+    ]
 
 testBoardSol :: String
-testBoardSol = unlines ["-------", "|? 1 .|", "|1 1 .|", "|. . .|", "-------"]
+testBoardSol =
+  unlines
+    [ "    0 1 2",
+      "  \9484\9472\9472\9472\9472\9472\9472\9472\9488",
+      "0 \9474 ? 1 . \9474",
+      "1 \9474 1 1 . \9474",
+      "2 \9474 . . . \9474",
+      "  \9492\9472\9472\9472\9472\9472\9472\9472\9496"
+    ]
 
 boardSpec :: Spec
 boardSpec = describe "Board" $ do

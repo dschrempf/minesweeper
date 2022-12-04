@@ -40,15 +40,25 @@ board xs
 
 frame :: [String] -> [String]
 frame [] = error "frame: empty board"
-frame xs = hLine : map bracket xs <> [hLine]
+frame xs = is : hLineTop : zipWith bracket [0 ..] xs ++ [hLineBottom]
   where
+    m = length xs
     n = length $ head xs
-    hLine = replicate (n + 2) '-'
-    bracket ys = '|' : (ys ++ ['|'])
+    hLineTop = "  ┌" ++ replicate (n + 2) '─' ++ "┐"
+    hLineBottom = "  └" ++ replicate (n + 2) '─' ++ "┘"
+    is = "    " ++ showLine [0 .. m - 1]
+    bracket :: Int -> String -> String
+    bracket i ys = show i ++ " │ " ++ ys ++ " │"
+
+showLine :: Show a => [a] -> String
+showLine = unwords . map show
 
 instance Show Board where
-  show = unlines . frame . map (unwords . map show) . getBoard
+  show = unlines . frame . map showLine . getBoard
 
 type HasMine = Bool
 
 type Solution = [[HasMine]]
+
+move :: (Natural, Natural) -> Board -> Either String Board
+move (x, y) = undefined
