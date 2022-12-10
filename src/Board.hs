@@ -22,7 +22,6 @@ module Board
 where
 
 import qualified Data.Matrix as M
-import qualified Data.Vector as V
 import Numeric.Natural
 
 data N = N0 | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8
@@ -46,7 +45,7 @@ instance ToChar Cell where
   toChar (Neighbors n) = toChar n
 
 data Board a = Board
-  { size :: Natural,
+  { _size :: Natural,
     getBoard :: M.Matrix a
   }
 
@@ -83,7 +82,7 @@ showLine :: ToChar a => [a] -> String
 showLine xs = unwords [[toChar x] | x <- xs]
 
 instance ToChar a => Show (Board a) where
-  show = unlines . frame . map (showLine . V.toList) . M.toRows . getBoard
+  show = unlines . frame . map showLine . M.toLists . getBoard
 
 type HasMine = Bool
 
@@ -97,9 +96,9 @@ move :: Move -> Position -> Board Cell -> Either String (Board Cell)
 move m (x, y) (Board n xs)
   | x >= n = Left $ "move: x exceeds board size: " <> show x <> ">=" <> show n
   | y >= n = Left $ "move: y exceeds board size: " <> show y <> ">=" <> show n
-  | otherwise = undefined
-
--- case (m, p) of
---   (Flag, Unknown) -> Right
--- where
--- p = xs !! x !! y
+  | otherwise = case (m, p) of
+      (Flag, Unknown) -> Right $ Board n (M.setElem Mine i xs)
+      _ -> undefined
+  where
+    i = (fromIntegral x, fromIntegral y)
+    p = xs M.! i
