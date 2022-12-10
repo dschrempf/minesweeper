@@ -15,9 +15,14 @@ module Board
     Board,
     board,
     Solution,
+    Position,
+    Move (..),
+    move,
   )
 where
 
+import qualified Data.Matrix as M
+import qualified Data.Vector as V
 import Numeric.Natural
 
 data N = N0 | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8
@@ -42,14 +47,14 @@ instance ToChar Cell where
 
 data Board a = Board
   { size :: Natural,
-    getBoard :: [[a]]
+    getBoard :: M.Matrix a
   }
 
 -- | Ensure that boards are square.
 board :: [[a]] -> Board a
 board [] = error "board: empty"
 board xs
-  | all (== l) ls = Board (fromIntegral l) xs
+  | all (== l) ls = Board (fromIntegral l) $ M.fromLists xs
   | otherwise = error "board: not square"
   where
     l = length xs
@@ -78,14 +83,23 @@ showLine :: ToChar a => [a] -> String
 showLine xs = unwords [[toChar x] | x <- xs]
 
 instance ToChar a => Show (Board a) where
-  show = unlines . frame . map showLine . getBoard
+  show = unlines . frame . map (showLine . V.toList) . M.toRows . getBoard
 
 type HasMine = Bool
 
-type Solution = [[HasMine]]
+type Solution = Board HasMine
 
-move :: (Natural, Natural) -> Board Cell -> Either String (Board Cell)
-move (x, y) (Board n xs)
+type Position = (Natural, Natural)
+
+data Move = Flag | Open
+
+move :: Move -> Position -> Board Cell -> Either String (Board Cell)
+move m (x, y) (Board n xs)
   | x >= n = Left $ "move: x exceeds board size: " <> show x <> ">=" <> show n
   | y >= n = Left $ "move: y exceeds board size: " <> show y <> ">=" <> show n
   | otherwise = undefined
+
+-- case (m, p) of
+--   (Flag, Unknown) -> Right
+-- where
+-- p = xs !! x !! y
