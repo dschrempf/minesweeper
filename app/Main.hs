@@ -51,6 +51,7 @@ pMovePos = do
 
 play :: Board -> IO ()
 play b = do
+  print b
   putStrLn "Enter move (f|o i j)"
   r <- parseOnly pMovePos <$> T.getLine
   case r of
