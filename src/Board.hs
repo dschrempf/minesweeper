@@ -14,13 +14,16 @@ module Board
     Cell (..),
     Board,
     board,
+    randomBoard,
     Position,
     Move (..),
     move,
   )
 where
 
+import Data.Foldable
 import qualified Data.Matrix as M
+import System.Random.Shuffle
 
 type HasMine = Bool
 
@@ -74,10 +77,22 @@ inBound n (x, y) = inBound1D x && inBound1D y
 -- Ensure that boards are square.
 board :: Int -> [(Int, Int)] -> Board
 board n xs
+  | n < 1 = error "board: too small"
   | all (inBound n) xs = Board (M.matrix n n g) (M.matrix n n $ const Unknown)
   | otherwise = error "board: mine indices out of bounds"
   where
     g x = x `elem` xs
+
+randomBoard :: Int -> Int -> IO Board
+randomBoard n m
+  | n < 1 = error "randomBoard: too small"
+  | m < 0 = error "randomBoard: too few mines"
+  | m > n * n = error "randomBoard: too many mines"
+  | otherwise = do
+      ms <- take m <$> shuffleM allPos
+      pure $ board n ms
+  where
+    allPos = [(i, j) | i <- [1 .. n], j <- [1 .. n]]
 
 -- Assume list of string is a rectangle.
 frame :: [String] -> [String]
@@ -111,29 +126,52 @@ data Move = Flag | Open
 isBomb :: Board -> Position -> Bool
 isBomb (Board ss _) p = ss M.! p
 
-nNeighbors :: Position -> Board -> N
-nNeighbors (i, j) b = nFromInt $ sum $ map (toInt . isBomb b) neighbors
+neighbors :: Board -> Position -> [Position]
+neighbors b (i, j) =
+  filter
+    (inBound n)
+    [ (pred i, j),
+      (pred i, pred j),
+      (i, pred j),
+      (succ i, pred j),
+      (succ i, j),
+      (succ i, succ j),
+      (i, succ j),
+      (pred i, succ j)
+    ]
   where
     n = getSize b
-    neighbors =
-      filter
-        (inBound n)
-        [ (pred i, j),
-          (pred i, pred j),
-          (i, pred j),
-          (succ i, pred j),
-          (succ i, j),
-          (succ i, succ j),
-          (i, succ j),
-          (pred i, succ j)
-        ]
+
+nNeighbors :: Board -> Position -> N
+nNeighbors b p = nFromInt $ sum $ map (toInt . isBomb b) (neighbors b p)
+  where
     toInt True = 1
     toInt False = 0
 
-open :: Position -> Board -> Either String Board
-open i (Board ss xs)
-  | ss M.! i = Left "open: mine"
-  | otherwise = Right undefined
+isDone :: Board -> Either String Board
+isDone b@(Board ss xs) =
+  if and $ zipWith f (M.toList ss) (M.toList xs)
+    then Left $ show b <> "Success!"
+    else Right b
+  where
+    f True Mine = True
+    f False Mine = False
+    f False (Neighbors _) = True
+    f _ _ = False
+
+open :: Board -> Position -> Either String Board
+open b@(Board ss xs) p
+  | isBomb b p = Left "open: mine"
+  | otherwise = case xs M.! p of
+      (Neighbors _) -> Right b
+      _ ->
+        let n = nNeighbors b p
+            b' = Board ss $ M.setElem (Neighbors n) p xs
+         in do
+              b'' <- case n of
+                N0 -> foldlM open b' (neighbors b' p)
+                _ -> Right b'
+              isDone b''
 
 move :: Move -> Position -> Board -> Either String Board
 move m p@(i, j) b@(Board ss xs)
@@ -141,12 +179,14 @@ move m p@(i, j) b@(Board ss xs)
   | j < 1 = Left $ "move: j zero or negative: " <> show i
   | i > n = Left $ "move: i exceeds board size: " <> show i <> ">=" <> show n
   | j > n = Left $ "move: j exceeds board size: " <> show j <> ">=" <> show n
-  | otherwise = case (m, e) of
-      (Flag, Unknown) -> Right $ Board ss $ M.setElem Mine p xs
-      (Flag, Mine) -> Right b
-      (Flag, _) -> Left "move: can not flag open cell"
-      (Open, Neighbors _) -> Right b
-      (Open, _) -> open p b
+  | otherwise = do
+      b' <- case (m, e) of
+        (Flag, Unknown) -> Right $ Board ss $ M.setElem Mine p xs
+        (Flag, Mine) -> Right b
+        (Flag, _) -> Left "move: can not flag open cell"
+        (Open, Neighbors _) -> Right b
+        (Open, _) -> open b p
+      isDone b'
   where
     n = M.nrows xs
     e = xs M.! p

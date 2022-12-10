@@ -56,8 +56,9 @@ library
   autogen-modules:
   ghc-options:
   build-depends:
-    , base    >=4.7 && <5
+    , base            >=4.7 && <5
     , matrix
+    , random-shuffle
 
 executable minesweeper
   import:          common, exec

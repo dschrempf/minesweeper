@@ -19,17 +19,16 @@ import Control.Applicative
 import Data.Attoparsec.Text
 import qualified Data.Text.IO as T
 
-readSize :: IO Int
-readSize = do
-  putStrLn "Enter size of board."
+readN :: IO Int
+readN = do
   r <- parseOnly decimal <$> T.getLine
   case r of
-    Left err -> putStrLn err >> readSize
+    Left err -> putStrLn err >> readN
     Right n ->
       if n < 1
         then do
           putStrLn "Enter a positive number."
-          readSize
+          readN
         else pure n
 
 pMove :: Parser Move
@@ -62,6 +61,9 @@ play b = do
 
 main :: IO ()
 main = do
-  n <- readSize
-  let b = board n []
+  putStrLn "Enter size of board."
+  n <- readN
+  putStrLn "Enter number of mines."
+  m <- readN
+  b <- randomBoard n m
   play b
