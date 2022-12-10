@@ -66,7 +66,11 @@ executable minesweeper
   other-modules:
   autogen-modules:
   ghc-options:
-  build-depends:   base >=4.7 && <5
+  build-depends:
+    , attoparsec
+    , base         >=4.7 && <5
+    , minesweeper
+    , text
 
 test-suite minesweeper-test
   import:          common, test

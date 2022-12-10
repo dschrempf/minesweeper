@@ -91,7 +91,9 @@ type Position = (Int, Int)
 data Move = Flag | Open
 
 open :: Position -> Board -> Either String Board
-open i (Board ss xs) = undefined
+open i (Board ss xs)
+  | ss M.! i = Left "open: mine"
+  | otherwise = Right undefined
 
 move :: Move -> Position -> Board -> Either String Board
 move m p@(i, j) b@(Board ss xs)

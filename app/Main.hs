@@ -14,5 +14,53 @@ module Main
   )
 where
 
+import Board
+import Control.Applicative
+import Data.Attoparsec.Text
+import qualified Data.Text.IO as T
+
+readSize :: IO Int
+readSize = do
+  putStrLn "Enter size of board."
+  r <- parseOnly decimal <$> T.getLine
+  case r of
+    Left err -> putStrLn err >> readSize
+    Right n ->
+      if n < 1
+        then do
+          putStrLn "Enter a positive number."
+          readSize
+        else pure n
+
+pMove :: Parser Move
+pMove = (Flag <$ char 'f') <|> (Open <$ char 'o')
+
+pPos :: Parser Position
+pPos = do
+  i <- decimal
+  _ <- char ' '
+  j <- decimal
+  pure (i, j)
+
+pMovePos :: Parser (Move, Position)
+pMovePos = do
+  m <- pMove
+  _ <- char ' '
+  p <- pPos
+  pure (m, p)
+
+play :: Board -> IO ()
+play b = do
+  putStrLn "Enter move (f|o i j)"
+  r <- parseOnly pMovePos <$> T.getLine
+  case r of
+    Left err -> putStrLn err >> play b
+    Right (m, p) -> case move m p b of
+      Left err -> putStrLn err
+      Right b' -> play b'
+
 main :: IO ()
-main = undefined
+main = do
+  n <- readSize
+  let b = board n []
+  play b
