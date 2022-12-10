@@ -1,0 +1,2 @@
+A simple Minesweeper implementation (game, not solver) on the command line.
+
