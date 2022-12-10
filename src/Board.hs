@@ -14,7 +14,6 @@ module Board
     Cell (..),
     Board,
     board,
-    Solution,
     Position,
     Move (..),
     move,
@@ -22,6 +21,8 @@ module Board
 where
 
 import qualified Data.Matrix as M
+
+type HasMine = Bool
 
 data N = N0 | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8
 
@@ -43,17 +44,22 @@ instance ToChar Cell where
   toChar Mine = 'o'
   toChar (Neighbors n) = toChar n
 
-newtype Board a = Board {getBoard :: M.Matrix a}
+data Board = Board
+  { _solution :: M.Matrix HasMine,
+    _getBoard :: M.Matrix Cell
+  }
 
--- | Ensure that boards are square.
-board :: [[a]] -> Board a
-board [] = error "board: empty"
-board xs
-  | all (== n) ls = Board $ M.fromLists xs
-  | otherwise = error "board: not square"
+-- | Create a board of given size, and with given mines (0 indexed).
+--
+-- Ensure that boards are square.
+board :: Int -> [(Int, Int)] -> Board
+board n xs
+  | all inBound xs = Board (M.matrix n n g) (M.matrix n n $ const Unknown)
+  | otherwise = error "board: mine indices out of bounds"
   where
-    n = length xs
-    ls = map length xs
+    inBound (x, y) = inBound1D x && inBound1D y
+    inBound1D x = x >= 0 && x < n
+    g x = x `elem` xs
 
 -- Assume list of string is a rectangle.
 frame :: [String] -> [String]
@@ -77,26 +83,22 @@ instance ToChar Int where
 showLine :: ToChar a => [a] -> String
 showLine xs = unwords [[toChar x] | x <- xs]
 
-instance ToChar a => Show (Board a) where
-  show = unlines . frame . map showLine . M.toLists . getBoard
-
-type HasMine = Bool
-
-type Solution = Board HasMine
+instance Show Board where
+  show = unlines . frame . map showLine . M.toLists . _getBoard
 
 type Position = (Int, Int)
 
 data Move = Flag | Open
 
-open :: Position -> Board Cell -> Either String (Board Cell)
-open i (Board xs) = undefined
+open :: Position -> Board -> Either String Board
+open i (Board ss xs) = undefined
 
-move :: Move -> Position -> Board Cell -> Either String (Board Cell)
-move m p@(i, j) b@(Board xs)
+move :: Move -> Position -> Board -> Either String Board
+move m p@(i, j) b@(Board ss xs)
   | i >= n = Left $ "move: x exceeds board size: " <> show i <> ">=" <> show n
   | j >= n = Left $ "move: y exceeds board size: " <> show j <> ">=" <> show n
   | otherwise = case (m, e) of
-      (Flag, Unknown) -> Right $ Board $ M.setElem Mine p xs
+      (Flag, Unknown) -> Right $ Board ss $ M.setElem Mine p xs
       (Flag, Mine) -> Right b
       (Flag, _) -> Left "move: can not flag open cell"
       (Open, Neighbors _) -> Right b

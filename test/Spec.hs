@@ -17,8 +17,8 @@ where
 import Board
 import Test.Hspec
 
-testBoardMin :: Board Cell
-testBoardMin = board [[Unknown]]
+testBoardMin :: Board
+testBoardMin = board 1 []
 
 testBoardMinSol :: String
 testBoardMinSol =
@@ -29,24 +29,11 @@ testBoardMinSol =
       "  \9492\9472\9472\9472\9496"
     ]
 
-testBoard :: Board Cell
-testBoard =
-  board
-    [ [Unknown, Neighbors N1, Neighbors N0],
-      [Neighbors N1, Neighbors N1, Neighbors N0],
-      [Neighbors N0, Neighbors N0, Neighbors N0]
-    ]
+testBoard :: Board
+testBoard = board 3 []
 
 testBoardSol :: String
-testBoardSol =
-  unlines
-    [ "    0 1 2",
-      "  \9484\9472\9472\9472\9472\9472\9472\9472\9488",
-      "0 \9474 ? 1 . \9474",
-      "1 \9474 1 1 . \9474",
-      "2 \9474 . . . \9474",
-      "  \9492\9472\9472\9472\9472\9472\9472\9472\9496"
-    ]
+testBoardSol = "    0 1 2\n  \9484\9472\9472\9472\9472\9472\9472\9472\9488\n0 \9474 ? ? ? \9474\n1 \9474 ? ? ? \9474\n2 \9474 ? ? ? \9474\n  \9492\9472\9472\9472\9472\9472\9472\9472\9496\n"
 
 boardSpec :: Spec
 boardSpec = describe "Board" $ do
