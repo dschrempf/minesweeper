@@ -22,7 +22,6 @@ module Board
 where
 
 import qualified Data.Matrix as M
-import Numeric.Natural
 
 data N = N0 | N1 | N2 | N3 | N4 | N5 | N6 | N7 | N8
 
@@ -44,19 +43,16 @@ instance ToChar Cell where
   toChar Mine = 'o'
   toChar (Neighbors n) = toChar n
 
-data Board a = Board
-  { _size :: Natural,
-    getBoard :: M.Matrix a
-  }
+newtype Board a = Board {getBoard :: M.Matrix a}
 
 -- | Ensure that boards are square.
 board :: [[a]] -> Board a
 board [] = error "board: empty"
 board xs
-  | all (== l) ls = Board (fromIntegral l) $ M.fromLists xs
+  | all (== n) ls = Board $ M.fromLists xs
   | otherwise = error "board: not square"
   where
-    l = length xs
+    n = length xs
     ls = map length xs
 
 -- Assume list of string is a rectangle.
@@ -88,17 +84,23 @@ type HasMine = Bool
 
 type Solution = Board HasMine
 
-type Position = (Natural, Natural)
+type Position = (Int, Int)
 
 data Move = Flag | Open
 
+open :: Position -> Board Cell -> Either String (Board Cell)
+open i (Board xs) = undefined
+
 move :: Move -> Position -> Board Cell -> Either String (Board Cell)
-move m (x, y) (Board n xs)
-  | x >= n = Left $ "move: x exceeds board size: " <> show x <> ">=" <> show n
-  | y >= n = Left $ "move: y exceeds board size: " <> show y <> ">=" <> show n
-  | otherwise = case (m, p) of
-      (Flag, Unknown) -> Right $ Board n (M.setElem Mine i xs)
-      _ -> undefined
+move m p@(i, j) b@(Board xs)
+  | i >= n = Left $ "move: x exceeds board size: " <> show i <> ">=" <> show n
+  | j >= n = Left $ "move: y exceeds board size: " <> show j <> ">=" <> show n
+  | otherwise = case (m, e) of
+      (Flag, Unknown) -> Right $ Board $ M.setElem Mine p xs
+      (Flag, Mine) -> Right b
+      (Flag, _) -> Left "move: can not flag open cell"
+      (Open, Neighbors _) -> Right b
+      (Open, _) -> open p b
   where
-    i = (fromIntegral x, fromIntegral y)
-    p = xs M.! i
+    n = M.nrows xs
+    e = xs M.! p
