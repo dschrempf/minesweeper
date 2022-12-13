@@ -14,7 +14,7 @@
       theseHpkgNames = [
         "minesweeper"
       ];
-      thisGhcVersion = "ghc924";
+      thisGhcVersion = "ghc943";
       hOverlay = selfn: supern: {
         haskell = supern.haskell // {
           packageOverrides = selfh: superh:
